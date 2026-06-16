@@ -65,7 +65,7 @@ Specify the dataset name and its corresponding file in `data_config.py`:
 
 ```python
 dataset_dict = {
-    "example_dataset": "example_dataset.h5ad"
+    "example_dataset": "example_dataset_file_name"
 }
 ```
 
