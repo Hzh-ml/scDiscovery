@@ -15,7 +15,7 @@ scDiscovery is a computational framework for single-cell data analysis and disco
 
 ## Datasets
 
-We provide convenient access to the downloadable datasets through the download links listed in the [`dataset`](./data/dataset.txt) text file.
+We provide convenient access to the downloadable datasets through the download links listed in the [`dataset`](./data/dataset.md) text file.
 
 After downloading the datasets, please organize the files as follows:
 
@@ -81,7 +81,7 @@ Finally, call `dynamic_novel_cell_type_expansion()` to predict known cell labels
 
 Use `evaluate_discovery_potential()` and `evaluate_model_on_novel_cell_type()` to evaluate discovery performance.
 
-For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery.ipynb`](./scDiscovery.ipynb).
+For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery.ipynb`](scDiscovery.ipynb).
 
 ## Tutorial
 
