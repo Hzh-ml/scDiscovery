@@ -89,7 +89,6 @@ def split_train_test_by_batch(omics1, omics2, dataset_name, setting, cell_type_k
     omics1_test_id = omics1[~mask_train_batch & mask_id_type].copy()
     omics1_test_ood = omics1[~mask_train_batch & ~mask_id_type].copy()
 
-    # remove 指定类别
     omics1_test_id = omics1_test_id[~omics1_test_id.obs[cell_type_key].isin(remove_type)].copy()
     omics1_train = omics1_train[~omics1_train.obs[cell_type_key].isin(remove_type)].copy()
 
@@ -108,7 +107,6 @@ def split_train_test_by_batch(omics1, omics2, dataset_name, setting, cell_type_k
         omics2_test_id = omics2[~mask_train_batch & mask_id_type].copy()
         omics2_test_ood = omics2[~mask_train_batch & ~mask_id_type].copy()
 
-        # remove 指定类别
         omics2_test_id = omics2_test_id[~omics2_test_id.obs[cell_type_key].isin(remove_type)].copy()
 
         global_categories_id = build_global_categories(
@@ -173,13 +171,6 @@ def build_global_categories(*cell_type_series_list):
     all_types = pd.concat(cell_type_series_list)
     categories = pd.Index(sorted(all_types.unique()))
     return categories
-
-
-# def encode_labels_with_categories(cell_type_series, categories):
-#     cat = pd.Categorical(cell_type_series, categories=categories)
-#     if (cat.codes < 0).any():
-#         raise ValueError("Found unknown cell type not in global categories")
-#     return cat.codes.astype(int)
 
 
 def encode_labels_with_categories(

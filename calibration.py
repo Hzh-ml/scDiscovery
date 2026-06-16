@@ -26,9 +26,6 @@ to_np = lambda x: x.data.cpu().numpy()
 
 
 def pseudo_labelling_for_test_mixed_data(X_mixed_test, Y_mixed_test, Z_mixed_test, X_mixed_test_raw, n_neighbors=15, resolution=0.45, omics='RNA'):
-    """
-    在低维表征空间Z中聚类，打伪标签
-    """
 
     adata = sc.AnnData(Z_mixed_test.numpy())
 
@@ -55,7 +52,6 @@ def pseudo_labelling_for_test_mixed_data(X_mixed_test, Y_mixed_test, Z_mixed_tes
     return adata
 
 
-# Step 1：计算已知 8 类的质心
 def compute_class_centroids(Z, Y, num_classes=8):
     centroids = []
     for c in range(num_classes):
@@ -63,7 +59,6 @@ def compute_class_centroids(Z, Y, num_classes=8):
     return np.stack(centroids)  # [8, D]
 
 
-# Step 2：计算混合数据每个 Leiden 簇的质心
 def compute_cluster_centroids(Z_mixed, cluster_labels):
     clusters = np.unique(cluster_labels)
     centroids = {}
@@ -73,45 +68,35 @@ def compute_cluster_centroids(Z_mixed, cluster_labels):
 
 
 def distinguish_known_unknown(Z_train, Y_train, mixed_test_adata, known_class_number):
-    """
-    区分已知类和未知类
-    """
 
-    # Step 1：计算已知 8 类的质心
     known_centroids = compute_class_centroids(Z_train, Y_train, num_classes=known_class_number)
 
-    # 取特征
     Z_mixed = mixed_test_adata.obsm["Z"] if "Z" in mixed_test_adata.obsm else mixed_test_adata.X
     cluster_labels = mixed_test_adata.obs["leiden"].astype(int).values
 
-    # Step 2：计算混合数据每个 Leiden 簇的质心
     cluster_centroids = compute_cluster_centroids(Z_mixed, cluster_labels)
 
-    # Step 3：计算“簇 ↔ 已知类”的相似度对齐
     cluster_ids = list(cluster_centroids.keys())
     C = np.stack([cluster_centroids[c] for c in cluster_ids])  # [K, D]
 
     # [K, 8]
     sim = cosine_similarity(C, known_centroids)
 
-    # 每个簇最像哪个已知类
     best_class = sim.argmax(axis=1)
     best_score = sim.max(axis=1)
 
-    # Step 4：为 8 个已知类选最匹配的 8 个簇
     selected_clusters = set()
 
     for k in range(known_class_number):
-        idx = np.argmax(sim[:, k])  # 与第 k 类最像的簇
+        idx = np.argmax(sim[:, k])
         selected_clusters.add(cluster_ids[idx])
 
     known_like_clusters = sorted(list(selected_clusters))
 
-    # Step 5：其余簇 = 未知类簇
+
     all_clusters = set(cluster_ids)
     unknown_clusters = sorted(list(all_clusters - set(known_like_clusters)))
 
-    # Step 6：给每个细胞打“已知 / 未知”标签
     def assign_known_unknown(cluster_labels, known_clusters):
         flags = []
         for c in cluster_labels:
@@ -129,28 +114,21 @@ def distinguish_known_unknown(Z_train, Y_train, mixed_test_adata, known_class_nu
 
 
 def get_and_remapping_novel_cell_type(mixed_test_adata, known_class_number=8):
-    """
-    获取未知类细胞，并映射伪标签，接在已知类的标签后边
-    """
 
-    # Step 1：取出 unknown 细胞
     unknown_mask = mixed_test_adata.obs["known_unknown"] == "unknown"
     adata_unknown = mixed_test_adata[unknown_mask].copy()
 
-    # Step 2：获取 unknown 簇列表
     unknown_clusters = sorted(
         adata_unknown.obs["leiden"].astype(str).unique()
     )
 
-    # Step 3：建立“旧簇 → 新标签”的映射
-    start_label = known_class_number  # 已知类是 0~7
+    start_label = known_class_number
 
     cluster2new = {
         c: start_label + i
         for i, c in enumerate(unknown_clusters)
     }
 
-    # Step 4：给 unknown 细胞打新标签
     adata_unknown.obs["new_label"] = (
         adata_unknown.obs["leiden"].astype(str).map(cluster2new).astype(int)
     )
@@ -294,8 +272,8 @@ def compute_class_centers(
     device="cuda",
 ):
     """
-    encoder: E_rna 或 E_atac
-    train_loader: omics1_train_loader 或 omics2_train_loader
+    encoder: E_rna/ E_atac
+    train_loader: omics1_train_loader / omics2_train_loader
                   batch = (x, y)
     return:
       centers: dict {class_id: center_tensor [D]}
@@ -330,10 +308,7 @@ def select_farthest_data(
     ratio=0.5,
     device="cuda"
 ):
-    """
-    不依赖 dataset index，不怕 shuffle=True
-    返回：selected_x, selected_y （可选 selected_dist）
-    """
+
     encoder.eval()
     centers = torch.stack(list(centers_dict.values())).to(device)  # [C, D]
 
@@ -369,7 +344,7 @@ def select_farthest_data(
 
 
 def init_filter(E_rna, E_atac, omics1_train_loader, omics2_train_loader, omics1_mixed_loader, omics2_mixed_loader, omics1_test_ood_loader, omics2_test_ood_loader):
-    # 1) 计算类质心（train 数据）
+
     omics1_center = compute_class_centers(
         E_rna, omics1_train_loader
     )
@@ -378,7 +353,6 @@ def init_filter(E_rna, E_atac, omics1_train_loader, omics2_train_loader, omics1_
         E_atac, omics2_train_loader
     )
 
-    # 2) mixed 数据 → 距离
     init_omics1_filtered_loader = select_farthest_data(
         E_rna,
         omics1_mixed_loader,
@@ -399,12 +373,11 @@ def init_filter(E_rna, E_atac, omics1_train_loader, omics2_train_loader, omics1_
 
 
 def init_filter_with_single_omics(E_rna, omics1_train_loader, omics1_mixed_loader, omics1_test_ood_loader):
-    # 1) 计算类质心（train 数据）
+
     omics1_center = compute_class_centers(
         E_rna, omics1_train_loader
     )
 
-    # 2) mixed 数据 → 距离
     init_omics1_filtered_loader = select_farthest_data(
         E_rna,
         omics1_mixed_loader,
@@ -436,8 +409,8 @@ def filter_ood_data(E_rna, E_atac, Classifier, omics1_train_loader, omics2_train
 
     mask1 = mixed_omics1_scores < threshold
     mask2 = mixed_omics2_scores < threshold
-    filtered_data1 = mixed_omics1_data[mask1]  # 筛选后的数据
-    filtered_data2 = mixed_omics2_data[mask2]  # 筛选后的数据
+    filtered_data1 = mixed_omics1_data[mask1]
+    filtered_data2 = mixed_omics2_data[mask2]
 
     filtered_raw_data1 = mixed_omics1_raw_data[mask1]
     filtered_raw_data2 = mixed_omics2_raw_data[mask2]
@@ -447,8 +420,8 @@ def filter_ood_data(E_rna, E_atac, Classifier, omics1_train_loader, omics2_train
 
         mask1 = mixed_omics1_scores < threshold
         mask2 = mixed_omics2_scores < threshold
-        filtered_data1 = mixed_omics1_data[mask1]  # 筛选后的数据
-        filtered_data2 = mixed_omics2_data[mask2]  # 筛选后的数据
+        filtered_data1 = mixed_omics1_data[mask1]
+        filtered_data2 = mixed_omics2_data[mask2]
 
         filtered_raw_data1 = mixed_omics1_raw_data[mask1]
         filtered_raw_data2 = mixed_omics2_raw_data[mask2]
@@ -476,38 +449,13 @@ def filter_ood_data_with_single_omics(E_rna, Classifier, omics1_train_loader, om
     mixed_omics1_scores, mixed_omics1_data, _, mixed_omics1_raw_data = get_ood_scores_with_single_omics(E_rna, Classifier,
                                                                                                     omics1_mixed_loader, device)  # omics1_mixed_loader, omics2_mixed_loader
 
-    # if filtered_omics1_ood_loader == None:
-    #     mixed_scores = np.concatenate((mixed_omics1_scores, mixed_omics2_scores), axis=0)
-    # else:
-    #     filtered_omics1_scores, filtered_omics2_scores, _, _, _, _ = get_ood_scores(E_rna, E_atac, Classifier, filtered_omics1_ood_loader, filtered_omics2_ood_loader)
-    #     mixed_scores = np.concatenate((filtered_omics1_scores, filtered_omics2_scores), axis=0)
-
-    # measures = get_measures(mixed_scores, id_scores, recall_level=recall_level, plot=False)
     measures = get_measures(id_scores, id_scores, recall_level=recall_level, plot=False)
-    # print_measures(measures[0], measures[1], measures[2])
 
     threshold = pre_threshold - 0.0
-    # threshold = measures[3]
-    # if threshold > 0.3:
-    #     threshold = 2*(1/class_number)
 
-    # if pre_threshold is not None:
-    #     threshold = pre_threshold-0.08
-    # if iter == 1:
-    #     threshold = 0.3
-    # elif iter == 2:
-    #     threshold = 0.15
-    # elif iter == 3:
-    #     threshold = 0.15
-    # elif iter == 4:
-    #     threshold = 0.1
-    # elif iter == 5:
-    #     threshold = 0.1
-
-    # print(f'Threshold in This Iter:{threshold}')
 
     mask1 = mixed_omics1_scores < threshold
-    filtered_data1 = mixed_omics1_data[mask1]  # 筛选后的数据
+    filtered_data1 = mixed_omics1_data[mask1]
 
     filtered_raw_data1 = mixed_omics1_raw_data[mask1]
 
@@ -515,7 +463,7 @@ def filter_ood_data_with_single_omics(E_rna, Classifier, omics1_train_loader, om
         # threshold += 0.1
 
         mask1 = mixed_omics1_scores < threshold+0.1
-        filtered_data1 = mixed_omics1_data[mask1]  # 筛选后的数据
+        filtered_data1 = mixed_omics1_data[mask1]
 
         filtered_raw_data1 = mixed_omics1_raw_data[mask1]
 
@@ -599,17 +547,14 @@ def train_distinguish_id_ood_with_single_omics(E_rna, Classifier, optimizer_E_rn
 
                 loss = l_ce + l_oe
 
-                # 清空梯度
                 optimizer_E_rna.zero_grad()
                 optimizer_fc.zero_grad()
 
-                loss.backward()  # 反向传播
+                loss.backward()
 
-                # 更新权重
                 optimizer_E_rna.step()
                 optimizer_fc.step()
 
-                # 更新学习率
                 scheduler_E_rna.step()
                 scheduler_fc.step()
 
@@ -634,18 +579,18 @@ def get_detected_ood_data(E_rna, E_atac, Classifier, omics1_mixed_loader, omics2
     mask1_ood = mixed_omics1_scores < final_threshold
     mask2_ood = mixed_omics2_scores < final_threshold
 
-    filtered_ood_data1 = mixed_omics1_data[mask1_ood]  # 筛选后的数据
-    filtered_ood_data2 = mixed_omics2_data[mask2_ood]  # 筛选后的数据
-    filtered_ood_label1 = mixed_omics1_label[mask1_ood]  # 筛选后的数据
-    filtered_ood_label2 = mixed_omics2_label[mask2_ood]  # 筛选后的数据
+    filtered_ood_data1 = mixed_omics1_data[mask1_ood]
+    filtered_ood_data2 = mixed_omics2_data[mask2_ood]
+    filtered_ood_label1 = mixed_omics1_label[mask1_ood]
+    filtered_ood_label2 = mixed_omics2_label[mask2_ood]
     filtered_ood_raw_data1 = mixed_omics1_raw_data[mask1_ood]
     filtered_ood_raw_data2 = mixed_omics2_raw_data[mask2_ood]
 
 
-    filtered_id_data1 = mixed_omics1_data[~mask1_ood]  # 筛选后的数据
-    filtered_id_data2 = mixed_omics2_data[~mask2_ood]  # 筛选后的数据
-    filtered_id_label1 = mixed_omics1_label[~mask1_ood]  # 筛选后的数据
-    filtered_id_label2 = mixed_omics2_label[~mask2_ood]  # 筛选后的数据
+    filtered_id_data1 = mixed_omics1_data[~mask1_ood]
+    filtered_id_data2 = mixed_omics2_data[~mask2_ood]
+    filtered_id_label1 = mixed_omics1_label[~mask1_ood]
+    filtered_id_label2 = mixed_omics2_label[~mask2_ood]
     filtered_id_raw_data1 = mixed_omics1_raw_data[~mask1_ood]
     filtered_id_raw_data2 = mixed_omics2_raw_data[~mask2_ood]
 

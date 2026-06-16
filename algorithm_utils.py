@@ -25,8 +25,6 @@ def train_encoder_classification(E_rna, E_atac, Classifier, optimizer_E_rna, opt
     for epoch in range(num_epochs):
         running_loss = 0.0
         for (_, x_rna, y_rna), (_, x_atac, y_atac) in zip(omics1_train_loader, omics2_train_loader):
-            # x_rna = x_rna.view(x_rna.size(0), -1).cuda()  # 将图片展平为一维向量
-            # x_atac = x_atac.view(x_atac.size(0), -1).cuda()  # 将图片展平为一维向量
             x_rna = x_rna.cuda()
             x_atac = x_atac.cuda()
 
@@ -41,19 +39,16 @@ def train_encoder_classification(E_rna, E_atac, Classifier, optimizer_E_rna, opt
 
             loss = F.cross_entropy(logits, y)
 
-            # 清空梯度
             optimizer_E_rna.zero_grad()
             optimizer_E_atac.zero_grad()
             optimizer_fc.zero_grad()
 
-            loss.backward()  # 反向传播
+            loss.backward()
 
-            # 更新权重
             optimizer_E_rna.step()
             optimizer_E_atac.step()
             optimizer_fc.step()
 
-            # 更新学习率
             scheduler_E_rna.step()
             scheduler_E_atac.step()
             scheduler_fc.step()
@@ -61,9 +56,6 @@ def train_encoder_classification(E_rna, E_atac, Classifier, optimizer_E_rna, opt
         ACC_Train = evaluate_model(E_rna, E_atac, Classifier, omics1_train_loader, omics2_train_loader)
 
         ACC_Test = evaluate_model(E_rna, E_atac, Classifier, omics1_test_id_loader, omics2_test_id_loader)
-
-        # if ACC_Train > 99.0:
-        #     break
 
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss/len(omics1_train_loader):.4f}, LR: {scheduler_E_rna.get_last_lr()[0]:.6f}, Acc_train: {ACC_Train:.2f}, Acc_test: {ACC_Test:.2f}')
 
@@ -85,17 +77,14 @@ def train_encoder_classification_with_single_omics(E_rna, Classifier, optimizer_
 
             loss = F.cross_entropy(logits, y)
 
-            # 清空梯度
             optimizer_E_rna.zero_grad()
             optimizer_fc.zero_grad()
 
-            loss.backward()  # 反向传播
+            loss.backward()
 
-            # 更新权重
             optimizer_E_rna.step()
             optimizer_fc.step()
 
-            # 更新学习率
             scheduler_E_rna.step()
             scheduler_fc.step()
 
@@ -103,15 +92,12 @@ def train_encoder_classification_with_single_omics(E_rna, Classifier, optimizer_
 
         ACC_Test = evaluate_model_with_single_omics(E_rna, Classifier, omics1_test_id_loader)
 
-        # if ACC_Train > 99.0:
-        #     break
 
         print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss/len(omics1_train_loader):.4f}, LR: {scheduler_E_rna.get_last_lr()[0]:.6f}, Acc_train: {ACC_Train:.2f}, Acc_test: {ACC_Test:.2f}')
 
     return E_rna, Classifier
 
 
-# 评估模型
 def evaluate_model(E_rna, E_atac, Classifier, omics1_train_loader, omics2_train_loader, device):
     E_rna.eval()
     E_atac.eval()
@@ -119,10 +105,8 @@ def evaluate_model(E_rna, E_atac, Classifier, omics1_train_loader, omics2_train_
 
     correct = 0
     total = 0
-    with torch.no_grad():  # 关闭梯度计算
+    with torch.no_grad():
         for (_, x_rna, y_rna), (_, x_atac, y_atac) in zip(omics1_train_loader, omics2_train_loader):
-            # x_rna = x_rna.view(x_rna.size(0), -1).cuda()  # 将图片展平为一维向量
-            # x_atac = x_atac.view(x_atac.size(0), -1).cuda()  # 将图片展平为一维向量
             x_rna = x_rna.to(device)
             x_atac = x_atac.to(device)
 
@@ -140,7 +124,6 @@ def evaluate_model(E_rna, E_atac, Classifier, omics1_train_loader, omics2_train_
             total += logits.size(0)
             correct += (predicted == y).sum().item()
     accuracy = 100 * correct / total
-    # print(f'Accuracy of the model on the test images: {accuracy:.2f}%')
     return accuracy
 
 
@@ -150,7 +133,7 @@ def evaluate_model_with_single_omics(E_rna, Classifier, omics1_loader, device):
 
     correct = 0
     total = 0
-    with torch.no_grad():  # 关闭梯度计算
+    with torch.no_grad():
         for _, x_rna, y_rna in omics1_loader:
             x_rna = x_rna.to(device)
             y_rna = y_rna.to(device)
@@ -164,7 +147,6 @@ def evaluate_model_with_single_omics(E_rna, Classifier, omics1_loader, device):
             total += logits.size(0)
             correct += (predicted == y_rna).sum().item()
     accuracy = 100 * correct / total
-    # print(f'Accuracy of the model on the test images: {accuracy:.2f}%')
     return accuracy
 
 
@@ -192,17 +174,14 @@ def train_decoder_classification_single_omics_base(E_rna, Classifier, optimizer_
 
             loss = 1.0*loss_cls  # + rna_kl_loss + rna_recon_loss + 0.5*loss_sc  #
 
-            # 清空梯度
             optimizer_E_rna.zero_grad()
             optimizer_fc.zero_grad()
 
-            loss.backward()  # 反向传播
+            loss.backward()
 
-            # 更新权重
             optimizer_E_rna.step()
             optimizer_fc.step()
 
-            # 更新学习率
             scheduler_E_rna.step()
             scheduler_fc.step()
 
@@ -217,9 +196,6 @@ def train_decoder_classification_single_omics_base(E_rna, Classifier, optimizer_
 
         print(f'Epoch [{epoch+1}/{num_epochs}], CLS Loss: {total_loss_cls/len(omics1_train_loader):.4f}, RNA Recon Loss: {total_rna_recon_loss/len(omics1_train_loader):.4f}, RNA KL Loss: {total_rna_kl_loss/len(omics1_train_loader):.4f}, Acc_train: {ACC_Train:.2f}, Acc_test: {ACC_Test:.2f}')
 
-        # if ACC_Train > 90.0:
-        #     break
-
     return E_rna, Classifier
 
 
@@ -230,7 +206,7 @@ def train_decoder_classification(E_rna, E_atac, D_rna, D_atac, Classifier, optim
     D_atac.train()
     Classifier.train()
 
-    Loss_SupCon = SupConLoss(temperature=0.07)  # 0.07
+    Loss_SupCon = SupConLoss(temperature=0.07)
     for epoch in range(num_epochs):
         total_loss_cls = 0.0
         total_rna_recon_loss = 0.0
@@ -238,8 +214,6 @@ def train_decoder_classification(E_rna, E_atac, D_rna, D_atac, Classifier, optim
         total_rna_kl_loss = 0.0
         total_atac_kl_loss = 0.0
         for (_, x_rna, y_rna), (_, x_atac, y_atac) in zip(omics1_train_loader, omics2_train_loader):
-            # x_rna = x_rna.view(x_rna.size(0), -1).cuda()  # 将图片展平为一维向量
-            # x_atac = x_atac.view(x_atac.size(0), -1).cuda()  # 将图片展平为一维向量
             x_rna = x_rna.to(device)
             x_atac = x_atac.to(device)
 
@@ -273,23 +247,20 @@ def train_decoder_classification(E_rna, E_atac, D_rna, D_atac, Classifier, optim
 
             loss = 0.1*loss_cls + rna_recon_loss + atac_recon_loss + rna_kl_loss + atac_kl_loss + 0.5*loss_sc
 
-            # 清空梯度
             optimizer_E_rna.zero_grad()
             optimizer_E_atac.zero_grad()
             optimizer_D_rna.zero_grad()
             optimizer_D_atac.zero_grad()
             optimizer_fc.zero_grad()
 
-            loss.backward()  # 反向传播
+            loss.backward()
 
-            # 更新权重
             optimizer_E_rna.step()
             optimizer_E_atac.step()
             optimizer_D_rna.step()
             optimizer_D_atac.step()
             optimizer_fc.step()
 
-            # 更新学习率
             scheduler_E_rna.step()
             scheduler_E_atac.step()
             scheduler_D_rna.step()
@@ -316,7 +287,7 @@ def train_single_omics(E_rna, D_rna, Classifier, optimizer_E_rna, optimizer_D_rn
     D_rna.train()
     Classifier.train()
 
-    Loss_SupCon = SupConLoss(temperature=0.07)  # 0.07
+    Loss_SupCon = SupConLoss(temperature=0.07)
     for epoch in range(num_epochs):
         total_loss_cls = 0.0
         total_rna_recon_loss = 0.0
@@ -327,14 +298,6 @@ def train_single_omics(E_rna, D_rna, Classifier, optimizer_E_rna, optimizer_D_rn
             y = y_rna.to(device)
 
             z_rna, mu_rna, logvar_rna = E_rna(x_rna)
-
-            # ################################################
-            # # 分类时，把双曲表示映射回切空间
-            # z_h_tangent = logmap0(z_rna_h, c=1.0)
-            #
-            # # 融合欧氏特征和双曲切空间特征
-            # z_rna_fusion = torch.cat([z_rna_e, z_h_tangent], dim=-1)
-            # ################################################
 
             re_z_rna = reparameterize(mu_rna, logvar_rna)
 
@@ -353,19 +316,16 @@ def train_single_omics(E_rna, D_rna, Classifier, optimizer_E_rna, optimizer_D_rn
 
             loss = 0.1*loss_cls + rna_kl_loss + rna_recon_loss + 0.5*loss_sc_e  #
 
-            # 清空梯度
             optimizer_E_rna.zero_grad()
             optimizer_D_rna.zero_grad()
             optimizer_fc.zero_grad()
 
-            loss.backward()  # 反向传播
+            loss.backward()
 
-            # 更新权重
             optimizer_E_rna.step()
             optimizer_D_rna.step()
             optimizer_fc.step()
 
-            # 更新学习率
             scheduler_E_rna.step()
             scheduler_D_rna.step()
             scheduler_fc.step()
@@ -381,11 +341,6 @@ def train_single_omics(E_rna, D_rna, Classifier, optimizer_E_rna, optimizer_D_rn
         else:
             ACC_Test = ACC_Train
 
-        # print(f'Epoch [{epoch+1}/{num_epochs}], CLS Loss: {total_loss_cls/len(omics1_train_loader):.4f}, RNA Recon Loss: {total_rna_recon_loss/len(omics1_train_loader):.4f}, RNA KL Loss: {total_rna_kl_loss/len(omics1_train_loader):.4f}, Acc_train: {ACC_Train:.2f}, Acc_test: {ACC_Test:.2f}')
-
-        # if ACC_Train > 90.0:
-        #     break
-
     return E_rna, D_rna, Classifier
 
 
@@ -396,7 +351,7 @@ def evaluate_model_with_multiomics(E_rna, E_atac, Classifier, paired_loader, dev
 
     correct = 0
     total = 0
-    with torch.no_grad():  # 关闭梯度计算
+    with torch.no_grad():
         for _, x_rna, _, x_atac, labels in paired_loader:
             x_rna = x_rna.to(device)
             x_atac = x_atac.to(device)
@@ -473,16 +428,10 @@ def get_latent_with_single_omics(
         perplexity=30,
         random_state=0
 ):
-    """
-    获取低维表征Z，标签Y，以及数据X
-    Joint t-SNE in latent z space for RNA / ATAC encoders
-    """
 
     import os
     import numpy as np
     import torch
-    import matplotlib.pyplot as plt
-    from sklearn.manifold import TSNE
 
     os.makedirs(save_dir, exist_ok=True)
 
@@ -511,9 +460,6 @@ def get_latent_with_single_omics(
             z_list.append(z.cpu())
             y_list.append(y.cpu())
 
-            # if sum(z.shape[0] for z in z_list) >= max_samples:
-            #     break
-
         Z = torch.cat(z_list, dim=0)  # [:max_samples]
         Y = torch.cat(y_list, dim=0)
         X = torch.cat(x_list, dim=0)
@@ -538,9 +484,9 @@ def visualize_decoder_tsne(
     dataloader,
     device,
     save_dir,
-    modality="RNA",          # "RNA" or "ATAC"
-    use_mu=True,             # True: 用 mu；False: 用 z 采样
-    max_samples=2000,        # t-SNE 样本上限
+    modality="RNA",
+    use_mu=True,
+    max_samples=2000,
     perplexity=30,
     random_state=0
 ):
@@ -599,7 +545,6 @@ def visualize_decoder_tsne(
     X_recon = torch.cat(recon_list, dim=0)[:max_samples]
     X_recon_np = X_recon.numpy()
 
-    # 保存重建结果
     torch.save(X_recon, os.path.join(save_dir, f"{modality}_reconstruction.pt"))
     np.save(os.path.join(save_dir, f"{modality}_reconstruction.npy"), X_recon_np)
 
@@ -663,14 +608,12 @@ def leiden_on_reconstruction_fixed(
 
     adata = sc.AnnData(X)
 
-    # -------- 关键修复：过滤 near-zero variance features --------
     var = np.var(adata.X, axis=0)
     keep = var > var_threshold
     adata = adata[:, keep].copy()
 
     print(f"[Info] kept {keep.sum()} / {len(keep)} features")
 
-    # -------- 正常流程 --------
     sc.pp.scale(adata)
     sc.tl.pca(adata, n_comps=n_pcs, svd_solver="arpack")
 
@@ -703,8 +646,8 @@ def save_decoder_reconstruction(
     dataloader,
     device,
     save_dir,
-    modality="RNA",          # "RNA" or "ATAC"
-    use_mu=True,             # True: 用 mu；False: 用 z 采样
+    modality="RNA",
+    use_mu=True,
     max_samples=2000
 ):
     """
@@ -721,8 +664,8 @@ def save_decoder_reconstruction(
     os.makedirs(save_dir, exist_ok=True)
 
     E = E_rna if modality == "RNA" else E_atac
-    # D = D_rna if modality == "RNA" else D_atac  # 重建
-    D = D_atac if modality == "RNA" else D_rna  # 预测
+    # D = D_rna if modality == "RNA" else D_atac
+    D = D_atac if modality == "RNA" else D_rna
 
     E.eval()
     D.eval()
@@ -734,7 +677,6 @@ def save_decoder_reconstruction(
 
     for batch in dataloader:
         if isinstance(batch, (list, tuple)):
-            # 按你现在的 dataloader 结构
             _, x, y = batch
             label_list.append(y)
         else:
@@ -794,39 +736,3 @@ def save_decoder_reconstruction(
         print(f"  Path    : {save_dir}/{modality}_labels.pt")
 
     return X_recon, (y_all if label_list else None)
-
-
-
-
-
-
-
-
-
-
-
-
-############################################
-###############     ADBC     ###############
-############################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-############################################
-##############     DNCTE     ###############
-############################################
