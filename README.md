@@ -23,7 +23,8 @@ The datasets will be released together with the project resources. After downloa
 ```text
 scDiscovery/
 ├── data/
-│   ├── dataset1
+│   ├── dataset.txt
+|   └── dataset1
 │   └── dataset2
 |   └── ...
 ├── figures
@@ -32,31 +33,19 @@ scDiscovery/
 └── requirements.txt
 ```
 
-The input data should be stored in `.h5ad` format. Each `.h5ad` file should contain cells as observations and genes or features as variables.
-
-A typical AnnData object should include:
-
-- `adata.X`: expression or feature matrix
-- `adata.obs`: cell-level metadata
-- `adata.var`: gene-level or feature-level metadata
-- `adata.obs["Batch"]`: batch or dataset information, if available
-- `adata.obs["CellType"]`: cell type label, if available
-
-For best performance, we recommend filtering low-quality cells and lowly detected genes or features before running scDiscovery.
-
 ## Installation
 
 To reproduce scDiscovery, we suggest first creating a conda environment:
 
 ```bash
-conda create -n scDiscovery python=3.8
+conda create -n scDiscovery python=3.11
 conda activate scDiscovery
 ```
 
 Then clone this repository:
 
 ```bash
-git clone https://github.com/cquzys/scDiscovery.git
+git clone https://github.com/Hzh-ml/scDiscovery.git
 cd scDiscovery
 ```
 
@@ -64,14 +53,6 @@ Install the required packages:
 
 ```bash
 pip install -r requirements.txt
-```
-
-If you use GPU acceleration, please install the PyTorch version that matches your CUDA version.
-
-For example:
-
-```bash
-pip install torch torchvision torchaudio
 ```
 
 ## Usage
@@ -130,7 +111,7 @@ The prediction results will be saved in the output directory.
 
 ## Tutorial
 
-### Tutorial 1: Basic single-cell discovery workflow
+### Tutorial 1: Cross-tissue novel cell type discovery (Heart-Pancreas)
 
 1. Install the required environment according to [Installation](#installation).
 2. Prepare the input dataset in `.h5ad` format.
@@ -140,31 +121,14 @@ The prediction results will be saved in the output directory.
 6. Extract cell embeddings.
 7. Perform visualization and downstream analysis.
 
-Example workflow:
+### Tutorial 2: Cross-species novel cell type discovery
 
-```bash
-conda activate scDiscovery
 
-python preprocess.py \
-    --input data/raw/example.h5ad \
-    --output data/processed/example_processed.h5ad
+### Tutorial 3: Cross-developmental-stage novel cell type discovery
 
-python train.py \
-    --data data/processed/example_processed.h5ad \
-    --save_path output/example
+### Tutorial 4: Cancer cell discovery
 
-python extract_embedding.py \
-    --data data/processed/example_processed.h5ad \
-    --model output/example/model.pt \
-    --output output/example/embedding.h5ad
-
-python predict.py \
-    --model output/example/model.pt \
-    --query data/processed/query_processed.h5ad \
-    --output output/example_prediction
-```
-
-### Tutorial 2: Visualization of learned embeddings
+### Tutorial 5: Novel cell population discovery across distinct cell states
 
 After obtaining the learned embeddings, users can visualize the results using UMAP or t-SNE.
 
@@ -198,20 +162,17 @@ Users can customize downstream analysis based on the metadata stored in the AnnD
 Running scDiscovery will generate the following files:
 
 ```text
-output/example/
-├── model.pt
-├── embedding.h5ad
-├── prediction.csv
-├── train.log
-└── figures/
+output/
+|   └── embedding.h5ad
+figures/
+|   ├── UMAP.png
+|   ├── ROC.png
+|   └── Density.png
 ```
 
 The main output files include:
 
-- `model.pt`: trained model weights
 - `embedding.h5ad`: AnnData file containing learned cell embeddings
-- `prediction.csv`: prediction or annotation results
-- `train.log`: training log
 - `figures/`: visualization results
 
 ## Citation
@@ -219,16 +180,10 @@ The main output files include:
 If you find our code or method useful, please consider citing our work:
 
 ```bibtex
-@article{scDiscovery,
-  title={scDiscovery: A Computational Framework for Single-Cell Discovery},
-  author={Zhaohui Hu},
+@article{huscDiscovery,
+  title={scDiscovery: Entropy-guided adaptive delineation of novel cell types across single-cell omics},
+  author={Zhaohui Hu, Chuan Li, Jialu Zhou, Siqi Tian, Yunhao Bai, Yu Zhang, Kunyao Zhu, Qun Yang, Nan Yin, Huibin Tan, Anxin Gu, Zhijiang Wan, Kaixiang Yang, Jinlong Shi, Guoli Yang, Xiaochun Cao, Liang Yang, Wenjing Yang, Long Lan, Yuansong Zeng, Li Shen, Mengzhu Wang},
   journal={},
   year={2026}
 }
 ```
-
-## Contact
-
-For questions, suggestions, or bug reports, please open an issue in this repository.
-
-Maintainer: Zhaohui Hu
