@@ -89,19 +89,19 @@ For more detailed instructions, please refer to and run the tutorial notebook [`
 
 1. Install the required environment according to [Installation](#installation).
 2. Please download the datasets using the download links provided in the dataset file and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
-3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_tissue.ipynb`](scDiscovery_corss_tissue.ipynb).
+3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_tissue.ipynb`](scDiscovery_cross_tissue.ipynb).
 
 ### Tutorial 2: Cross-species novel cell type discovery (Liver-Human-Monkey)
 
 1. Install the required environment according to [Installation](#installation).
 2. Please download the datasets using the download links provided in the dataset file and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
-3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_species.ipynb`](scDiscovery_corss_species.ipynb).
+3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_species.ipynb`](scDiscovery_cross_species.ipynb).
 
 ### Tutorial 3: Cross-developmental-stage novel cell type discovery (Zeisel-2018)
 
 1. Install the required environment according to [Installation](#installation).
 2. Please download the datasets using the download links provided in the dataset file and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
-3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_developmental_stages.ipynb`](scDiscovery_corss_developmental_stages.ipynb).
+3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_developmental_stages.ipynb`](scDiscovery_cross_developmental_stages.ipynb).
 
 ### Tutorial 4: Cancer cell discovery (Peng-PDAC)
 
@@ -113,7 +113,7 @@ For more detailed instructions, please refer to and run the tutorial notebook [`
 
 1. Install the required environment according to [Installation](#installation).
 2. Please download the datasets using the download links provided in the dataset file and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
-3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_cell_state.ipynb`](scDiscovery_corss_cell_state.ipynb).
+3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_cell_state.ipynb`](scDiscovery_cross_cell_state.ipynb).
 
 ## Output
 
