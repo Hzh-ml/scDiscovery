@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 import scanpy as sc
+from sklearn.metrics import adjusted_rand_score, adjusted_mutual_info_score, normalized_mutual_info_score, homogeneity_score
+import torch
+from scDiscovery_architecture import reparameterize
 from sklearn.metrics import (
     classification_report,
     f1_score,
@@ -10,7 +13,7 @@ from sklearn.metrics import (
 )
 
 
-def evaluate_ncd_discovery_potential(adata, y_true, y_pred, embed_key='X_glue', unknown_label='Unknown'):
+def evaluate_discovery_potential(adata, y_true, y_pred, embed_key='X_glue', unknown_label='Unknown'):
     """
     NCD 评估函数：兼顾“未知类识别准确率”与“新类潜在结构质量”
 
@@ -34,52 +37,23 @@ def evaluate_ncd_discovery_potential(adata, y_true, y_pred, embed_key='X_glue', 
 
     metrics = {}
 
-    # =========================================================
-    # Part 1: Coarse-grained Metrics (粗粒度识别能力)
-    # 评估：模型能不能把 Known 分对，能不能把 Unknown 挑出来？
-    # =========================================================
+    metrics['Multi-F1'] = f1_score(y_true_arr, y_pred_arr, average='weighted')
+    metrics['Multi-Accuracy'] = accuracy_score(y_true_arr, y_pred_arr)
 
-    # 1.1 宏观 F1 (Weighted/Macro) - 关注整体分类性能
-    # 这里的类别集合是 [Known_A, Known_B, ..., Unknown]
-    metrics['Coarse_F1_Macro'] = f1_score(y_true_arr, y_pred_arr, average='macro')
-    metrics['Coarse_F1_weighted'] = f1_score(y_true_arr, y_pred_arr, average='weighted')
-    metrics['Coarse_ACC'] = accuracy_score(y_true_arr, y_pred_arr)
-
-    # 1.2 专门针对 "Unknown" 的识别能力
-    # 把问题转化为二分类：Unknown vs Known
     true_is_unk = (y_true_arr == unknown_label)
     pred_is_unk = (y_pred_arr == unknown_label)
 
-    # Unknown 类的 F1 分数 (最重要的单一分类指标)
-    metrics['Detection_F1_Unknown'] = f1_score(true_is_unk, pred_is_unk, pos_label=True)  # average='weighted',
+    metrics['F1'] = f1_score(true_is_unk, pred_is_unk, pos_label=True)
 
-    # 纯度与查全率 (辅助分析)
-    # Precision: 预测为 Unknown 的样本里，真的 Unknown 占多少？(越低说明误伤了已知类)
     if pred_is_unk.sum() > 0:
-        metrics['Detection_Prec_Unknown'] = (true_is_unk & pred_is_unk).sum() / pred_is_unk.sum()
+        metrics['Precision'] = (true_is_unk & pred_is_unk).sum() / pred_is_unk.sum()
     else:
-        metrics['Detection_Prec_Unknown'] = 0.0
+        metrics['Precision'] = 0.0
 
-    # Recall: 真实的 Unknown 样本里，被找出来多少？(越低说明把新类误判为已知类)
     if true_is_unk.sum() > 0:
-        metrics['Detection_Recall_Unknown'] = (true_is_unk & pred_is_unk).sum() / true_is_unk.sum()
+        metrics['Recall'] = (true_is_unk & pred_is_unk).sum() / true_is_unk.sum()
     else:
-        metrics['Detection_Recall_Unknown'] = 0.0
-
-    # =========================================================
-    # Part 2: Fine-grained Discovery Potential (细粒度发现潜力)
-    # 策略 1: 评估【预测为未知】的区域 (User's original, dirty but useful for output check)
-    # 这代表了“用户最终拿到手的那堆 Unknown 数据的质量”
-    metrics.update(_calculate_cluster_metrics(
-        emb, pred_is_unk, prefix='Pred_Unk'
-    ))
-
-    # 策略 2: 评估【被正确捕获的真实未知】区域 (Intersection, Pure)
-    # 这代表了“模型真正发现的新类样本的质量”，排除了已知类的干扰
-    mask_pure_discovery = true_is_unk & pred_is_unk
-    metrics.update(_calculate_cluster_metrics(
-        emb, mask_pure_discovery, prefix='Pure_Unk'
-    ))
+        metrics['Recall'] = 0.0
 
     return metrics
 
@@ -162,3 +136,64 @@ def calculate_discovery_asw(X_emb, n_neighbors=15, resolution=0.5):
     except Exception as e:
         print(f"结构评分计算出错: {e}")
         return 0
+
+
+def evaluate_model_on_novel_cell_type(E_rna, D_rna, Classifier, omics1_train_loader, device):
+    E_rna.eval()
+    Classifier.eval()
+
+    y_true = []
+    y_pred = []
+    recon_data = []
+    emb = []
+
+    correct = 0
+    total = 0
+
+    with torch.no_grad():  # 关闭梯度计算
+        for _, x_rna, y_rna in omics1_train_loader:  # _,
+            x_rna = x_rna.to(device)
+            y_rna = y_rna
+
+            z_rna, mu_rna, logvar_rna = E_rna(x_rna)
+
+            ###############################################
+            re_z_rna = reparameterize(mu_rna, logvar_rna)
+
+            # ---------------- decoder -----------------
+            x_hat_rna = D_rna(re_z_rna)
+
+            ###############################################
+
+            logits = Classifier(z_rna)
+
+            _, predicted = torch.max(logits.data, 1)
+
+            total += logits.size(0)
+            correct += (predicted.cpu() == y_rna).sum().item()
+
+            y_true.append(y_rna)
+            y_pred.append(predicted.cpu())
+            recon_data.append(x_hat_rna.cpu())
+            emb.append(z_rna.detach().cpu())
+
+    accuracy = 100 * correct / total
+
+    y_true = torch.cat(y_true, dim=0).numpy()
+    y_pred = torch.cat(y_pred, dim=0).numpy()
+    recon_data_rna = torch.cat(recon_data, dim=0)
+    Emb = torch.cat(emb, dim=0).numpy()
+
+    ari = adjusted_rand_score(y_true, y_pred)
+    ami = adjusted_mutual_info_score(y_true, y_pred)
+    nmi = normalized_mutual_info_score(y_true, y_pred)
+    hom = homogeneity_score(y_true, y_pred)
+
+    metrics = {
+        "ARI": ari,
+        "AMI": ami,
+        "NMI": nmi,
+        "HOM": hom
+    }
+
+    return metrics, accuracy, recon_data_rna, torch.tensor(y_true), torch.tensor(y_pred), Emb
