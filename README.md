@@ -23,10 +23,11 @@ The datasets will be released together with the project resources. After downloa
 ```text
 scDiscovery/
 ├── data/
-│   ├── raw/
-│   └── processed/
-├── output/
-├── scDiscovery/
+│   ├── dataset1
+│   └── dataset2
+|   └── ...
+├── figures
+├── scDiscovery.ipynb
 ├── README.md
 └── requirements.txt
 ```
