@@ -12,13 +12,12 @@ scDiscovery is a computational framework for single-cell data analysis and disco
 - [Tutorial](#tutorial)
 - [Output](#output)
 - [Citation](#citation)
-- [Contact](#contact)
 
 ## Datasets
 
-We provide easy access to the datasets used in this project.
+We provide convenient access to the downloadable datasets through the download links listed in the [`dataset`](./data/dataset.txt) text file.
 
-The datasets will be released together with the project resources. After downloading the datasets, please organize the files as follows:
+After downloading the datasets, please organize the files as follows:
 
 ```text
 scDiscovery/
@@ -27,6 +26,7 @@ scDiscovery/
 |   └── dataset1
 │   └── dataset2
 |   └── ...
+├── output
 ├── figures
 ├── scDiscovery.ipynb
 ├── README.md
@@ -57,105 +57,63 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Data preprocessing
+### Data configuration
 
-Before running scDiscovery, please prepare the input single-cell dataset in `.h5ad` format.
+Before running scDiscovery, prepare the input single-cell dataset in `.h5ad` format and place it in the `data` directory.
 
-A typical preprocessing command is:
+Specify the dataset name and its corresponding file in `data_config.py`:
 
-```bash
-python preprocess.py \
-    --input data/raw/example.h5ad \
-    --output data/processed/example_processed.h5ad
+```python
+dataset_dict = {
+    "example_dataset": "example_dataset.h5ad"
+}
 ```
 
-The preprocessing step may include quality control, normalization, feature selection, scaling, and construction of the processed AnnData object.
+### Training and prediction
 
-### Model training
+After data configuration, use `load_data()` to load, preprocess, and return the processed data.
 
-After preprocessing, run the following command to train scDiscovery:
+Run `train_single_omics()` to train scDiscovery and learn cell representations. Then, use `adaptive_decision_boundary_calibration()` to estimate an entropy-based decision boundary for discriminating known and unknown cells.
 
-```bash
-python train.py \
-    --data data/processed/example_processed.h5ad \
-    --save_path output/example
-```
+Finally, call `dynamic_novel_cell_type_expansion()` to predict known cell labels and resolve unknown cells into fine-grained novel cell populations. The output `AnnData` object contains the learned scDiscovery embeddings and predicted cell labels.
 
-The trained model and intermediate results will be saved in the specified output directory.
+### Evaluation
 
-### Representation extraction
+Use `evaluate_discovery_potential()` and `evaluate_model_on_novel_cell_type()` to evaluate discovery performance.
 
-To extract cell embeddings from a trained model, run:
-
-```bash
-python extract_embedding.py \
-    --data data/processed/example_processed.h5ad \
-    --model output/example/model.pt \
-    --output output/example/embedding.h5ad
-```
-
-The output `.h5ad` file stores the learned cell representations and can be used for visualization and downstream analysis.
-
-### Prediction
-
-To apply a trained scDiscovery model to query data, run:
-
-```bash
-python predict.py \
-    --model output/example/model.pt \
-    --query data/processed/query_processed.h5ad \
-    --output output/example_prediction
-```
-
-The prediction results will be saved in the output directory.
+For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery.ipynb`](./scDiscovery.ipynb).
 
 ## Tutorial
 
 ### Tutorial 1: Cross-tissue novel cell type discovery (Heart-Pancreas)
 
 1. Install the required environment according to [Installation](#installation).
-2. Prepare the input dataset in `.h5ad` format.
-3. Place the dataset under the `data/raw/` folder.
-4. Run preprocessing.
-5. Train scDiscovery.
-6. Extract cell embeddings.
-7. Perform visualization and downstream analysis.
+2. Please download the datasets using the download links provided in the dataset file and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
+3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_tissue.ipynb`](./scDiscovery_corss_tissue.ipynb).
 
-### Tutorial 2: Cross-species novel cell type discovery
+### Tutorial 2: Cross-species novel cell type discovery (Liver-Human-Monkey)
 
+1. Install the required environment according to [Installation](#installation).
+2. Please download the datasets using the download links provided in the dataset file and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
+3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_species.ipynb`](./scDiscovery_corss_species.ipynb).
 
-### Tutorial 3: Cross-developmental-stage novel cell type discovery
+### Tutorial 3: Cross-developmental-stage novel cell type discovery (Zeisel-2018)
 
-### Tutorial 4: Cancer cell discovery
+1. Install the required environment according to [Installation](#installation).
+2. Please download the datasets using the download links provided in the dataset file and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
+3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_developmental_stages.ipynb`](./scDiscovery_corss_developmental_stages.ipynb).
 
-### Tutorial 5: Novel cell population discovery across distinct cell states
+### Tutorial 4: Cancer cell discovery (Peng-PDAC)
 
-After obtaining the learned embeddings, users can visualize the results using UMAP or t-SNE.
+1. Install the required environment according to [Installation](#installation).
+2. Please download the datasets using the download links provided in the dataset file and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
+3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cancer_cell_discovery.ipynb`](./scDiscovery_cancer_cell_discovery.ipynb).
 
-```bash
-python visualize.py \
-    --input output/example/embedding.h5ad \
-    --output output/example/figures
-```
+### Tutorial 5: Novel cell population discovery across distinct cell states (HNSCC-RNA and HNSCC-ADT)
 
-The generated figures will be saved under:
-
-```text
-output/example/figures/
-```
-
-### Tutorial 3: Downstream analysis
-
-The learned representations from scDiscovery can be used for downstream tasks, including:
-
-- cell clustering
-- cell type annotation
-- batch effect analysis
-- marker gene discovery
-- trajectory or state discovery
-- query-to-reference mapping
-
-Users can customize downstream analysis based on the metadata stored in the AnnData object.
+1. Install the required environment according to [Installation](#installation).
+2. Please download the datasets using the download links provided in the dataset file and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
+3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_cell_state.ipynb`](./scDiscovery_corss_cell_state.ipynb).
 
 ## Output
 
