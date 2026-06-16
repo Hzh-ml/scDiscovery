@@ -718,7 +718,7 @@ def get_expanded_prediction_results(E_rna, Classifier_expanded, omics1_mixed_loa
 
 
 def dynamic_novel_cell_type_expansion(E_rna, D_rna, Classifier, optimizer_E_rna, optimizer_D_rna, scheduler_E_rna, scheduler_D_rna,
-                                                              filtered_omics1_ood_loader, omics1_train_loader, omics1_test_id_loader, omics1_mixed_loader, gene_name, class_number, num_epochs, device):
+                                                              filtered_omics1_ood_loader, omics1_train_loader, omics1_test_id_loader, omics1_mixed_loader, gene_name, class_number, dataset_name, num_epochs, device):
 
 
     adata_rna_ood = get_pseudo_label(filtered_omics1_ood_loader)
@@ -730,6 +730,8 @@ def dynamic_novel_cell_type_expansion(E_rna, D_rna, Classifier, optimizer_E_rna,
 
     adata = get_expanded_prediction_results(E_rna, Classifier_expanded, omics1_mixed_loader, device, gene_name,
                                             class_number)
+
+    adata.write(f'./output/scDiscovery_{dataset_name}.h5ad')
 
     return adata, E_rna, D_rna, Classifier_expanded
 
