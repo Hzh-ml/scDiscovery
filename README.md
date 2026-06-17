@@ -75,7 +75,7 @@ After data configuration, use `load_data()` to load, preprocess, and return the 
 
 Run `train_single_omics()` to train scDiscovery and learn cell representations. Then, use `adaptive_decision_boundary_calibration()` to estimate an entropy-based decision boundary for discriminating known and unknown cells.
 
-Finally, call `dynamic_novel_cell_type_expansion()` to predict known cell labels and resolve unknown cells into fine-grained novel cell populations. The output `AnnData` object contains the learned scDiscovery embeddings and predicted cell labels.
+Finally, call `dynamic_novel_cell_type_expansion()` to predict known cell types and resolve unknown cells into fine-grained novel cell populations. The output `AnnData` object contains the learned scDiscovery embeddings and predicted cell types.
 
 ### Evaluation
 
