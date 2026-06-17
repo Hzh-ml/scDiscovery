@@ -15,7 +15,7 @@ scDiscovery is an entropy-guided framework applicable to single-cell datasets fr
 
 ## Datasets
 
-We provide convenient access to the downloadable datasets through the download links listed in the [`dataset`](./data/dataset.md) text file.
+We provide dataset descriptions and download instructions in the [`dataset.md`](./data/dataset.md) file.
 
 After downloading the datasets, please organize the files as follows:
 
@@ -23,8 +23,8 @@ After downloading the datasets, please organize the files as follows:
 scDiscovery/
 ├── data/
 │   ├── dataset.txt
-|   └── dataset1
-│   └── dataset2
+|   └── dataset1.h5ad
+│   └── dataset2.h5ad
 |   └── ...
 ├── output
 ├── figures
@@ -73,7 +73,7 @@ dataset_dict = {
 
 After data configuration, use `load_data()` to load, preprocess, and return the processed data.
 
-Run `train_single_omics()` to train scDiscovery and learn cell representations. Then, use `adaptive_decision_boundary_calibration()` to estimate an entropy-based decision boundary for discriminating known and unknown cells.
+Run `train_single_omics()` to train the model and learn discriminative cell representations. Then, use `adaptive_decision_boundary_calibration()` to estimate an entropy-based decision boundary for discriminating known and unknown cells.
 
 Finally, call `dynamic_novel_cell_type_expansion()` to predict known cell types and resolve unknown cells into fine-grained novel cell populations. The output `AnnData` object contains the learned scDiscovery embeddings and predicted cell types.
 
@@ -88,31 +88,31 @@ For more detailed instructions, please refer to and run the tutorial notebook [`
 ### Tutorial 1: Cross-tissue novel cell type discovery (Heart-Pancreas)
 
 1. Install the required environment according to [Installation](#installation).
-2. Please download the datasets using the download links provided in the dataset file and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
+2. Please follow the download instructions provided in the [`dataset.md`](./data/dataset.md) file, download the required datasets, and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
 3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_tissue.ipynb`](scDiscovery_cross_tissue.ipynb).
 
 ### Tutorial 2: Cross-species novel cell type discovery (Liver-Human-Monkey)
 
 1. Install the required environment according to [Installation](#installation).
-2. Please download the datasets using the download links provided in the dataset file and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
+2. Please follow the download instructions provided in the [`dataset.md`](./data/dataset.md) file, download the required datasets, and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
 3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_species.ipynb`](scDiscovery_cross_species.ipynb).
 
 ### Tutorial 3: Cross-developmental-stage novel cell type discovery (Zeisel-2018)
 
 1. Install the required environment according to [Installation](#installation).
-2. Please download the datasets using the download links provided in the dataset file and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
+2. Please follow the download instructions provided in the [`dataset.md`](./data/dataset.md) file, download the required datasets, and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
 3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_developmental_stages.ipynb`](scDiscovery_cross_developmental_stages.ipynb).
 
 ### Tutorial 4: Cancer cell discovery (Peng-PDAC)
 
 1. Install the required environment according to [Installation](#installation).
-2. Please download the datasets using the download links provided in the dataset file and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
+2. Please follow the download instructions provided in the [`dataset.md`](./data/dataset.md) file, download the required datasets, and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
 3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cancer_cell_discovery.ipynb`](scDiscovery_cancer_cell_discovery.ipynb).
 
 ### Tutorial 5: Novel cell population discovery across distinct cell states (HNSCC-RNA and HNSCC-ADT)
 
 1. Install the required environment according to [Installation](#installation).
-2. Please download the datasets using the download links provided in the dataset file and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
+2. Please follow the download instructions provided in the [`dataset.md`](./data/dataset.md) file, download the required datasets, and place the downloaded files in the `data` directory. If you use your own data, please preprocess it into `.h5ad` format and place the resulting files in the `data` directory.
 3. For more detailed instructions, please refer to and run the tutorial notebook [`scDiscovery_cross_cell_state.ipynb`](scDiscovery_cross_cell_state.ipynb).
 
 ## Output
