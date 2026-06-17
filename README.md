@@ -2,7 +2,7 @@
 
 The official implementation for **scDiscovery**.
 
-scDiscovery is a computational framework for single-cell data analysis and discovery. This repository provides code, tutorials, and example workflows for preprocessing single-cell data, learning informative cell representations, and performing downstream discovery tasks such as clustering, annotation, visualization, and prediction.
+scDiscovery is an entropy-guided framework applicable to single-cell datasets from multiple omics modalities. It enables reliable discrimination between known and unknown cells, as well as fine-grained resolution of unknown cells into biologically distinct novel cell types. This repository provides code, tutorials, and example workflows for preprocessing single-cell datasets from diverse omics modalities, discovering novel cell populations across tissues, species, cancer contexts, distinct cellular states, and developmental stages, and performing downstream evaluation and visualization.
 
 ## Table of Contents
 
